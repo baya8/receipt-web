@@ -27,6 +27,20 @@
       #user-info { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
       #user-info img { border-radius: 50%; width: 40px; height: 40px; }
       .hidden { display: none; }
+
+      /* --- フォームとリストのスタイル --- */
+      .content-card { background: #fff; padding: 25px; border-radius: 8px; margin-top: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+      .form-group { margin-bottom: 20px; }
+      .form-group label { display: block; font-weight: bold; margin-bottom: 8px; color: #333; }
+      .form-group input[type="file"], .form-group input[type="date"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+      .radio-group label { display: inline-block; margin-right: 15px; font-weight: normal; }
+      .radio-group input { margin-right: 5px; }
+      #receipt-form button { width: 100%; padding: 12px; background-color: #1a73e8; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; transition: background-color 0.3s; }
+      #receipt-form button:hover { background-color: #185abc; }
+      #receipt-list { margin-top: 15px; }
+      .receipt-item { border: 1px solid #eee; padding: 15px; border-radius: 4px; margin-bottom: 10px; }
+      /* --- ここまで --- */
+
       @media (max-width: 600px) {
         body, .container { margin-top: 0; background: white; box-shadow: none; }
       }
@@ -50,9 +64,46 @@
       </div>
 
       <div id="firestore-content" class="hidden">
-        <h2>あなたのレシート一覧</h2>
-        <p>ここにFirestoreから取得したレシートデータが表示されます。</p>
-        <!-- データ表示エリア -->
+
+        <!-- レシート登録フォーム -->
+        <div class="content-card">
+          <h2>レシートを登録する</h2>
+          <form id="receipt-form">
+            <div class="form-group">
+              <label for="receipt-image">レシート画像 (必須)</label>
+              <input type="file" id="receipt-image" accept="image/*" required>
+            </div>
+            <div class="form-group">
+              <label for="receipt-date">日付 (任意)</label>
+              <input type="date" id="receipt-date">
+            </div>
+            <div class="form-group">
+              <label>支払者 (必須)</label>
+              <div class="radio-group">
+                <label><input type="radio" name="payer" value="まさたか" required> まさたか</label>
+                <label><input type="radio" name="payer" value="あかね"> あかね</label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>精算方法 (必須)</label>
+              <div class="radio-group">
+                <label><input type="radio" name="settlement" value="折半" required> 折半</label>
+                <label><input type="radio" name="settlement" value="全額相手負担"> 全額相手負担</label>
+                <label><input type="radio" name="settlement" value="精算しない"> 精算しない</label>
+                <label><input type="radio" name="settlement" value="精算済み"> 精算済み</label>
+              </div>
+            </div>
+            <button type="submit">登録する</button>
+          </form>
+        </div>
+
+        <!-- レシート一覧表示エリア -->
+        <div class="content-card">
+          <h2>あなたのレシート一覧</h2>
+          <div id="receipt-list">
+            <p>ここにFirestoreから取得したレシートデータが表示されます。</p>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -67,6 +118,8 @@
           const userName = document.getElementById('user-name');
           const loginMessage = document.getElementById('login-message');
           const firestoreContent = document.getElementById('firestore-content');
+          const receiptForm = document.getElementById('receipt-form');
+          const receiptList = document.getElementById('receipt-list');
 
           const auth = firebase.auth();
           const db = firebase.firestore();
@@ -84,8 +137,8 @@
               loginMessage.classList.add('hidden');
               firestoreContent.classList.remove('hidden');
 
-              // ここにFirestoreからデータを読み込む処理を記述します
               console.log(`${user.displayName} さんがログインしました。`);
+              // TODO: ここにFirestoreからデータを読み込む処理を記述します
               // 例: db.collection('receipts').where('userId', '==', user.uid).get()...
 
             } else {
@@ -116,6 +169,29 @@
             });
           });
 
+          // --- フォーム送信のイベントリスナー ---
+          receiptForm.addEventListener('submit', (e) => {
+            e.preventDefault(); // フォームのデフォルトの送信動作をキャンセル
+
+            // フォームから値を取得
+            const imageFile = document.getElementById('receipt-image').files[0];
+            const receiptDate = document.getElementById('receipt-date').value;
+            const payer = receiptForm.elements['payer'].value;
+            const settlement = receiptForm.elements['settlement'].value;
+
+            if (!imageFile) {
+              alert('レシート画像を選択してください。');
+              return;
+            }
+
+            console.log('フォームデータ:', {
+              imageFile, receiptDate, payer, settlement
+            });
+
+            // TODO: ここにFirebase Storageへの画像アップロードと、
+            // Firestoreへのデータ保存処理を記述します。
+            alert('（開発中）データがコンソールに出力されました。');
+          });
         } catch (e) {
           console.error(e);
           document.body.innerHTML = 'Firebase SDKの読み込み中にエラーが発生しました。コンソールを確認してください。';

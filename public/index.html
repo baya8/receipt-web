@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>レシート管理アプリ</title>
+
+    <!-- update the version number as needed -->
+    <script defer src="/__/firebase/9.21.0/firebase-app-compat.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script defer src="/__/firebase/9.21.0/firebase-auth-compat.js"></script>
+    <script defer src="/__/firebase/9.21.0/firebase-firestore-compat.js"></script>
+    <!-- 
+      initialize the SDK after all desired features are loaded, set useEmulator to false
+      to avoid connecting the SDK to running emulators.
+    -->
+    <script defer src="/__/firebase/init.js"></script>
+
+    <style media="screen">
+      body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
+      .container { max-width: 800px; margin: 50px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+      h1 { color: #1a73e8; }
+      .auth-container { text-align: right; margin-bottom: 20px; }
+      .auth-container button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+      #login-button { background-color: #4285F4; color: white; }
+      #logout-button { background-color: #f44336; color: white; }
+      #user-info { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+      #user-info img { border-radius: 50%; width: 40px; height: 40px; }
+      .hidden { display: none; }
+      @media (max-width: 600px) {
+        body, .container { margin-top: 0; background: white; box-shadow: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="auth-container">
+        <div id="user-info" class="hidden">
+          <img id="user-photo" src="" alt="User Photo">
+          <span id="user-name"></span>
+        </div>
+        <button id="login-button">Googleでログイン</button>
+        <button id="logout-button" class="hidden">ログアウト</button>
+      </div>
+
+      <h1>レシート管理アプリ</h1>
+
+      <div id="login-message">
+        <p>アプリを利用するには、Googleアカウントでログインしてください。</p>
+      </div>
+
+      <div id="firestore-content" class="hidden">
+        <h2>あなたのレシート一覧</h2>
+        <p>ここにFirestoreから取得したレシートデータが表示されます。</p>
+        <!-- データ表示エリア -->
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        try {
+          // DOM要素の取得
+          const loginButton = document.getElementById('login-button');
+          const logoutButton = document.getElementById('logout-button');
+          const userInfo = document.getElementById('user-info');
+          const userPhoto = document.getElementById('user-photo');
+          const userName = document.getElementById('user-name');
+          const loginMessage = document.getElementById('login-message');
+          const firestoreContent = document.getElementById('firestore-content');
+
+          const auth = firebase.auth();
+          const db = firebase.firestore();
+
+          // --- 認証状態の監視 ---
+          auth.onAuthStateChanged(user => {
+            if (user) {
+              // --- ログインしている場合 ---
+              // UIの更新
+              userName.textContent = user.displayName;
+              userPhoto.src = user.photoURL;
+              userInfo.classList.remove('hidden');
+              logoutButton.classList.remove('hidden');
+              loginButton.classList.add('hidden');
+              loginMessage.classList.add('hidden');
+              firestoreContent.classList.remove('hidden');
+
+              // ここにFirestoreからデータを読み込む処理を記述します
+              console.log(`${user.displayName} さんがログインしました。`);
+              // 例: db.collection('receipts').where('userId', '==', user.uid).get()...
+
+            } else {
+              // --- ログアウトしている場合 ---
+              // UIの更新
+              userInfo.classList.add('hidden');
+              logoutButton.classList.add('hidden');
+              loginButton.classList.remove('hidden');
+              loginMessage.classList.remove('hidden');
+              firestoreContent.classList.add('hidden');
+              console.log('ログアウトしました。');
+            }
+          });
+
+          // --- イベントリスナーの設定 ---
+          // ログインボタン
+          loginButton.addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch(error => {
+              console.error("ログインエラー", error);
+            });
+          });
+
+          // ログアウトボタン
+          logoutButton.addEventListener('click', () => {
+            auth.signOut().catch(error => {
+              console.error("ログアウトエラー", error);
+            });
+          });
+
+        } catch (e) {
+          console.error(e);
+          document.body.innerHTML = 'Firebase SDKの読み込み中にエラーが発生しました。コンソールを確認してください。';
+        }
+      });
+    </script>
+  </body>
+</html>

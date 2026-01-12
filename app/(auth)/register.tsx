@@ -1,19 +1,34 @@
 import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { createUser } from './initialSetup';
 
 export default function RegisterScreen() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleRegister = () => {
-    // TODO: 新規登録処理の実装
-    console.log('Register with:', displayName, email, password);
+  const handleRegister = async () => {
+    if (!displayName || !email || !password) {
+      Alert.alert('エラー', 'すべての項目を入力してください。');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await createUser(email, password, displayName);
+      router.push('/(auth)/nickname');
+    } catch (error) {
+      console.error(error);
+      Alert.alert('エラー', '登録に失敗しました。');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -45,8 +60,8 @@ export default function RegisterScreen() {
           onChangeText={setPassword}
           secureTextEntry
         />
-        <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
-          <ThemedText style={styles.registerButtonText}>登録</ThemedText>
+        <TouchableOpacity style={styles.registerButton} onPress={handleRegister} disabled={isLoading}>
+          <ThemedText style={styles.registerButtonText}>{isLoading ? '処理中...' : '登録'}</ThemedText>
         </TouchableOpacity>
       </View>
 
